@@ -89,7 +89,7 @@ def test_subworkflows_install_across_organizations(self):
     # Verify that the installed_by entry was added correctly
     modules_json = ModulesJson(self.pipeline_dir)
     mod_json = modules_json.get_modules_json()
-    assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["jvfe"]["prokka"]["installed_by"] == [
+    assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["jvfe"]["wget"]["installed_by"] == [
         "get_genome_annotation"
     ]
 
