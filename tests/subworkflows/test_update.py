@@ -11,10 +11,11 @@ import nf_core.utils
 from nf_core.components.components_utils import NF_CORE_MODULES_NAME, NF_CORE_MODULES_REMOTE
 from nf_core.modules.modules_json import ModulesJson
 from nf_core.modules.update import ModuleUpdate
+from nf_core.subworkflows.install import SubworkflowInstall
 from nf_core.subworkflows.update import SubworkflowUpdate
 
 from ..test_subworkflows import TestSubworkflows
-from ..utils import OLD_SUBWORKFLOWS_SHA, cmp_component
+from ..utils import CROSS_ORGANIZATION_BRANCH, CROSS_ORGANIZATION_URL, OLD_SUBWORKFLOWS_SHA, cmp_component
 
 
 class TestSubworkflowsUpdate(TestSubworkflows):
@@ -372,3 +373,17 @@ class TestSubworkflowsUpdate(TestSubworkflows):
         assert "ensemblvep" not in mod_json["repos"][NF_CORE_MODULES_REMOTE]["modules"][NF_CORE_MODULES_NAME]
         assert "ensemblvep/vep" in mod_json["repos"][NF_CORE_MODULES_REMOTE]["modules"][NF_CORE_MODULES_NAME]
         assert Path(self.pipeline_dir, "modules", NF_CORE_MODULES_NAME, "ensemblvep/vep").is_dir()
+
+    def test_update_subworkflow_across_orgs(self):
+        """Install and update a subworkflow with modules from different organizations"""
+        install_obj = SubworkflowInstall(
+            self.pipeline_dir,
+            remote_url=CROSS_ORGANIZATION_URL,
+            branch=CROSS_ORGANIZATION_BRANCH,
+            hash="b7dc6a4fcfdf780c9228b3abf6bd821b466c2f81",
+        )
+        # The fastq_trim_fastp_fastqc subworkflow contains the cross-org fastqc module, not the nf-core one
+        install_obj.install("fastq_trim_fastp_fastqc")
+
+        update_obj = SubworkflowUpdate(self.pipeline_dir, update_all=False, update_deps=True, show_diff=False)
+        assert update_obj.update("fastq_trim_fastp_fastqc") is True
