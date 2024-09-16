@@ -101,9 +101,6 @@ class TestSubworkflowsInstall(TestSubworkflows):
 
     def test_subworkflow_install_with_same_module(self):
         """Test installing a subworkflow with a module from a different organization that is already installed from another org"""
-        # Install fastqc from nf-core
-        self.mods_install.install("fastqc")
-
         install_obj = SubworkflowInstall(
             self.pipeline_dir, remote_url=CROSS_ORGANIZATION_URL, branch=CROSS_ORGANIZATION_BRANCH
         )
