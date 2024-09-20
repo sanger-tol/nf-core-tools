@@ -113,6 +113,9 @@ class TestSubworkflows(unittest.TestCase):
 
         # Set up remove objects
         self.subworkflow_remove = nf_core.subworkflows.SubworkflowRemove(self.pipeline_dir)
+        self.subworkflow_remove_cross_org = nf_core.subworkflows.SubworkflowRemove(
+            self.pipeline_dir, remote_url=CROSS_ORGANIZATION_URL, branch=CROSS_ORGANIZATION_BRANCH
+        )
 
     @pytest.fixture(autouse=True)
     def _use_caplog(self, caplog):
