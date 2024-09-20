@@ -7,7 +7,6 @@ from nf_core.subworkflows.install import SubworkflowInstall
 
 from ..test_subworkflows import TestSubworkflows
 from ..utils import (
-    CROSS_ORGANIZATION_BRANCH,
     CROSS_ORGANIZATION_URL,
     GITLAB_BRANCH_TEST_BRANCH,
     GITLAB_REPO,
@@ -87,11 +86,8 @@ class TestSubworkflowsInstall(TestSubworkflows):
 
     def test_subworkflows_install_across_organizations(self):
         """Test installing a subworkflow with modules from different organizations"""
-        install_obj = SubworkflowInstall(
-            self.pipeline_dir, remote_url=CROSS_ORGANIZATION_URL, branch=CROSS_ORGANIZATION_BRANCH
-        )
         # The get_genome_annotation subworkflow contains modules from different organizations
-        install_obj.install("get_genome_annotation")
+        self.subworkflow_install_cross_org.install("get_genome_annotation")
         # Verify that the installed_by entry was added correctly
         modules_json = ModulesJson(self.pipeline_dir)
         mod_json = modules_json.get_modules_json()
@@ -101,11 +97,8 @@ class TestSubworkflowsInstall(TestSubworkflows):
 
     def test_subworkflow_install_with_same_module(self):
         """Test installing a subworkflow with a module from a different organization that is already installed from another org"""
-        install_obj = SubworkflowInstall(
-            self.pipeline_dir, remote_url=CROSS_ORGANIZATION_URL, branch=CROSS_ORGANIZATION_BRANCH
-        )
         # The fastq_trim_fastp_fastqc subworkflow contains the cross-org fastqc module, not the nf-core one
-        install_obj.install("fastq_trim_fastp_fastqc")
+        self.subworkflow_install_cross_org.install("fastq_trim_fastp_fastqc")
         # Verify that the installed_by entry was added correctly
         modules_json = ModulesJson(self.pipeline_dir)
         mod_json = modules_json.get_modules_json()
