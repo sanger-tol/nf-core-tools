@@ -60,6 +60,8 @@ class ComponentInstall(ComponentCommand):
 
         if self.current_remote != self.modules_repo.remote_url and self.sha is not None:
             self.current_sha = None
+        else:
+            self.current_sha = self.sha
 
         if self.repo_type == "modules":
             log.error(f"You cannot install a {component} in a clone of nf-core/modules")
