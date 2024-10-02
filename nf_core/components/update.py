@@ -41,6 +41,8 @@ class ComponentUpdate(ComponentCommand):
         limit_output=False,
     ):
         super().__init__(component_type, pipeline_dir, remote_url, branch, no_pull)
+        self.current_remote = remote_url
+        self.branch = branch
         self.force = force
         self.prompt = prompt
         self.sha = sha
@@ -92,6 +94,13 @@ class ComponentUpdate(ComponentCommand):
         Returns:
             (bool): True if the update was successful, False otherwise.
         """
+        if isinstance(component, dict):
+            # Override modules_repo when the component to install is a dependency from a subworkflow.
+            remote_url = component.get("git_remote", self.current_remote)
+            branch = component.get("branch", self.branch)
+            self.modules_repo = ModulesRepo(remote_url, branch)
+            component = component["name"]
+
         self.component = component
         if updated is None:
             updated = []
@@ -879,9 +888,9 @@ class ComponentUpdate(ComponentCommand):
                             # We need to update it too
                             if component in comp_content["installed_by"]:
                                 if component_type == "modules":
-                                    modules_to_update.append(comp)
+                                    modules_to_update.append({"name": comp, "git_remote": repo})
                                 elif component_type == "subworkflows":
-                                    subworkflows_to_update.append(comp)
+                                    subworkflows_to_update.append({"name": comp, "git_remote": repo})
 
         return modules_to_update, subworkflows_to_update
 
