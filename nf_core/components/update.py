@@ -41,9 +41,12 @@ class ComponentUpdate(ComponentCommand):
         limit_output=False,
     ):
         super().__init__(component_type, pipeline_dir, remote_url, branch, no_pull)
+        self.current_remote = remote_url
+        self.branch = branch
         self.force = force
         self.prompt = prompt
         self.sha = sha
+        self.current_sha = sha
         self.update_all = update_all
         self.show_diff = show_diff
         self.save_diff_fn = save_diff_fn
@@ -72,7 +75,7 @@ class ComponentUpdate(ComponentCommand):
                 f"{self.component_type.title()} can not be updated in clones of the nf-core/modules repository."
             )
 
-        if self.prompt and self.sha is not None:
+        if self.prompt and self.current_sha is not None:
             raise UserWarning("Cannot use '--sha' and '--prompt' at the same time.")
 
         if not self.has_valid_directory():
@@ -92,6 +95,18 @@ class ComponentUpdate(ComponentCommand):
         Returns:
             (bool): True if the update was successful, False otherwise.
         """
+        if isinstance(component, dict):
+            # Override modules_repo when the component to install is a dependency from a subworkflow.
+            remote_url = component.get("git_remote", self.current_remote)
+            branch = component.get("branch", self.branch)
+            self.modules_repo = ModulesRepo(remote_url, branch)
+            component = component["name"]
+
+            if self.current_remote == self.modules_repo.remote_url and self.sha is not None:
+                self.current_sha = self.sha
+            else:
+                self.current_sha = None
+
         self.component = component
         if updated is None:
             updated = []
@@ -119,8 +134,8 @@ class ComponentUpdate(ComponentCommand):
             )
 
         # Verify that the provided SHA exists in the repo
-        if self.sha is not None and not self.modules_repo.sha_exists_on_branch(self.sha):
-            log.error(f"Commit SHA '{self.sha}' doesn't exist in '{self.modules_repo.remote_url}'")
+        if self.current_sha is not None and not self.modules_repo.sha_exists_on_branch(self.current_sha):
+            log.error(f"Commit SHA '{self.current_sha}' doesn't exist in '{self.modules_repo.remote_url}'")
             return False
 
         # Get the list of modules/subworkflows to update, and their version information
@@ -183,7 +198,7 @@ class ComponentUpdate(ComponentCommand):
 
             if current_version is not None and not self.force:
                 if current_version == version:
-                    if self.sha or self.prompt:
+                    if self.current_sha or self.prompt:
                         log.info(f"'{component_fullname}' is already installed at {version}")
                     else:
                         log.info(f"'{component_fullname}' is already up to date")
@@ -384,13 +399,15 @@ class ComponentUpdate(ComponentCommand):
             )
 
         # Check that the supplied name is an available module/subworkflow
-        if component and component not in self.modules_repo.get_avail_components(self.component_type, commit=self.sha):
+        if component and component not in self.modules_repo.get_avail_components(
+            self.component_type, commit=self.current_sha
+        ):
             raise LookupError(
                 f"{self.component_type[:-1].title()} '{component}' not found in list of available {self.component_type}."
                 f"Use the command 'nf-core {self.component_type} list remote' to view available software"
             )
 
-        sha = self.sha
+        sha = self.current_sha
         config_entry = None
         if self.update_config is not None:
             if any(
@@ -424,7 +441,7 @@ class ComponentUpdate(ComponentCommand):
                 )
 
             sha = config_entry
-            if self.sha is not None:
+            if self.current_sha is not None:
                 log.warning(
                     f"Found entry in '.nf-core.yml' for {self.component_type[:-1]} '{component}' "
                     "which will override version specified with '--sha'"
@@ -488,7 +505,7 @@ class ComponentUpdate(ComponentCommand):
                         components_info[repo_name][component_dir].append(
                             (
                                 component,
-                                self.sha,
+                                self.current_sha,
                                 self.modules_json.get_component_branch(
                                     self.component_type, component, repo_name, component_dir
                                 ),
@@ -498,7 +515,7 @@ class ComponentUpdate(ComponentCommand):
                         components_info[repo_name][component_dir] = [
                             (
                                 component,
-                                self.sha,
+                                self.current_sha,
                                 self.modules_json.get_component_branch(
                                     self.component_type, component, repo_name, component_dir
                                 ),
@@ -533,7 +550,7 @@ class ComponentUpdate(ComponentCommand):
                                             ),
                                         )
                                     ]
-                        if self.sha is not None:
+                        if self.current_sha is not None:
                             overridden_repos.append(repo_name)
                     elif self.update_config[repo_name][component_dir] is False:
                         for directory, component in components:
@@ -549,7 +566,7 @@ class ComponentUpdate(ComponentCommand):
                                     components_info[repo_name][component_dir].append(
                                         (
                                             component,
-                                            self.sha,
+                                            self.current_sha,
                                             self.modules_json.get_component_branch(
                                                 self.component_type, component, repo_name, component_dir
                                             ),
@@ -559,7 +576,7 @@ class ComponentUpdate(ComponentCommand):
                                     components_info[repo_name][component_dir] = [
                                         (
                                             component,
-                                            self.sha,
+                                            self.current_sha,
                                             self.modules_json.get_component_branch(
                                                 self.component_type, component, repo_name, component_dir
                                             ),
@@ -588,7 +605,7 @@ class ComponentUpdate(ComponentCommand):
                                             ),
                                         )
                                     ]
-                                if self.sha is not None:
+                                if self.current_sha is not None:
                                     overridden_components.append(component)
                             elif dir_config[component] is False:
                                 # Otherwise the entry must be 'False' and we should ignore the component
@@ -622,7 +639,7 @@ class ComponentUpdate(ComponentCommand):
                                 ),
                             )
                         ]
-                if self.sha is not None:
+                if self.current_sha is not None:
                     overridden_repos.append(repo_name)
             elif isinstance(self.update_config, dict) and self.update_config[repo_name] is False:
                 skipped_repos.append(repo_name)
@@ -868,7 +885,16 @@ class ComponentUpdate(ComponentCommand):
         if self.component_type == "modules":
             # All subworkflow names in the installed_by section of a module are subworkflows using this module
             # We need to update them too
-            subworkflows_to_update = [subworkflow for subworkflow in installed_by if subworkflow != self.component_type]
+            for subworkflow in installed_by:
+                if subworkflow != component:
+                    for remote_url, content in mods_json["repos"].items():
+                        all_subworkflows = content["subworkflows"]
+                        for _, details in all_subworkflows.items():
+                            if subworkflow in details:
+                                git_remote = remote_url
+                                break
+                    subworkflows_to_update.append({"name": subworkflow, "git_remote": git_remote})
+
         elif self.component_type == "subworkflows":
             for repo, repo_content in mods_json["repos"].items():
                 for component_type, dir_content in repo_content.items():
@@ -879,9 +905,9 @@ class ComponentUpdate(ComponentCommand):
                             # We need to update it too
                             if component in comp_content["installed_by"]:
                                 if component_type == "modules":
-                                    modules_to_update.append(comp)
+                                    modules_to_update.append({"name": comp, "git_remote": repo, "org_path": dir})
                                 elif component_type == "subworkflows":
-                                    subworkflows_to_update.append(comp)
+                                    subworkflows_to_update.append({"name": comp, "git_remote": repo, "org_path": dir})
 
         return modules_to_update, subworkflows_to_update
 
