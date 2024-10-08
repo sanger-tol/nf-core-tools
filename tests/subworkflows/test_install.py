@@ -86,13 +86,13 @@ class TestSubworkflowsInstall(TestSubworkflows):
 
     def test_subworkflows_install_across_organizations(self):
         """Test installing a subworkflow with modules from different organizations"""
-        # The get_genome_annotation subworkflow contains modules from different organizations
-        self.subworkflow_install_cross_org.install("get_genome_annotation")
+        # The fastq_trim_fastp_fastqc subworkflow contains modules from different organizations
+        self.subworkflow_install_cross_org.install("fastq_trim_fastp_fastqc")
         # Verify that the installed_by entry was added correctly
         modules_json = ModulesJson(self.pipeline_dir)
         mod_json = modules_json.get_modules_json()
-        assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["jvfe"]["wget"]["installed_by"] == [
-            "get_genome_annotation"
+        assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["jvfe"]["fastqc"]["installed_by"] == [
+            "fastq_trim_fastp_fastqc"
         ]
 
     def test_subworkflow_install_with_same_module(self):
