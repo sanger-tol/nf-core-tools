@@ -96,15 +96,12 @@ class ComponentUpdate(ComponentCommand):
         Returns:
             (bool): True if the update was successful, False otherwise.
         """
-        if isinstance(component, str):
-            component = {"name": component, "git_remote": self.current_remote, "branch": self.branch}
-
         if isinstance(component, dict):
             # Override modules_repo when the component to install is a dependency from a subworkflow.
             remote_url = component.get("git_remote", self.current_remote)
             branch = component.get("branch", self.branch)
             self.modules_repo = ModulesRepo(remote_url, branch)
-            component_name = component["name"]
+            component = component["name"]
 
         if self.current_remote == self.modules_repo.remote_url and self.sha is not None:
             self.current_sha = self.sha
@@ -144,7 +141,7 @@ class ComponentUpdate(ComponentCommand):
 
         # Get the list of modules/subworkflows to update, and their version information
         components_info = (
-            self.get_all_components_info() if self.update_all else [self.get_single_component_info(component_name)]
+            self.get_all_components_info() if self.update_all else [self.get_single_component_info(component)]
         )
         # Save the current state of the modules.json
         old_modules_json = self.modules_json.get_modules_json()
