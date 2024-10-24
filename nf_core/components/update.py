@@ -99,11 +99,12 @@ class ComponentUpdate(ComponentCommand):
         if isinstance(component, str):
             component = {"name": component, "git_remote": self.current_remote, "branch": self.branch}
 
-        # Override modules_repo when the component to install is a dependency from a subworkflow.
-        remote_url = component.get("git_remote", self.current_remote)
-        branch = component.get("branch", self.branch)
-        self.modules_repo = ModulesRepo(remote_url, branch)
-        component_name = component["name"]
+        if isinstance(component, dict):
+            # Override modules_repo when the component to install is a dependency from a subworkflow.
+            remote_url = component.get("git_remote", self.current_remote)
+            branch = component.get("branch", self.branch)
+            self.modules_repo = ModulesRepo(remote_url, branch)
+            component_name = component["name"]
 
         if self.current_remote == self.modules_repo.remote_url and self.sha is not None:
             self.current_sha = self.sha
