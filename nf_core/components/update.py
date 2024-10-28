@@ -42,6 +42,7 @@ class ComponentUpdate(ComponentCommand):
         limit_output=False,
     ):
         super().__init__(component_type, pipeline_dir, remote_url, branch, no_pull)
+        self.original_remote = remote_url
         self.current_remote = remote_url
         self.branch = branch
         self.force = force
@@ -103,7 +104,7 @@ class ComponentUpdate(ComponentCommand):
             self.modules_repo = ModulesRepo(remote_url, branch)
             component = component["name"]
 
-        if self.current_remote != self.modules_repo.remote_url and self.sha is None:
+        if self.original_remote != self.modules_repo.remote_url and self.sha is None:
             self.current_sha = None
 
         if self.current_remote is None:
