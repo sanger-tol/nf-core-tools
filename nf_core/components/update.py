@@ -104,11 +104,11 @@ class ComponentUpdate(ComponentCommand):
             self.modules_repo = ModulesRepo(remote_url, branch)
             component = component["name"]
 
-        if self.original_remote != self.modules_repo.remote_url and self.sha is None:
-            self.current_sha = None
-
         if self.current_remote is None:
             self.current_remote = self.modules_repo.remote_url
+
+        if self.original_remote != self.current_remote:
+            self.current_sha = None
 
         self.component = component
         if updated is None:
