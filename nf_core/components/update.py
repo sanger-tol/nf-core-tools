@@ -107,10 +107,10 @@ class ComponentUpdate(ComponentCommand):
         if self.current_remote is None:
             self.current_remote = self.modules_repo.remote_url
 
-        if self.original_remote != self.modules_repo.remote_url and self.sha is None:
-            self.current_sha = None
-        else:
-            self.current_sha = self.sha
+        # if self.original_remote != self.modules_repo.remote_url and self.sha is None:
+        #    self.current_sha = None
+        # else:
+        #    self.current_sha = self.sha
 
         self.component = component
         if updated is None:
