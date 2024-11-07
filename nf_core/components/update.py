@@ -893,8 +893,8 @@ class ComponentUpdate(ComponentCommand):
                                 if subworkflow in details:
                                     git_remote = remote_url
                                 break
-                    if subworkflow != self.component_type:
-                        subworkflows_to_update.append({"name": subworkflow, "git_remote": git_remote})
+                if subworkflow != self.component_type:
+                    subworkflows_to_update.append({"name": subworkflow, "git_remote": git_remote})
 
         elif self.component_type == "subworkflows":
             for repo, repo_content in mods_json["repos"].items():
