@@ -1010,5 +1010,3 @@ class ComponentUpdate(ComponentCommand):
         self.component_type = original_component_type
         self.modules_json.pipeline_components = None
         self.update_all = original_update_all
-        if self.current_remote is None:
-            self.current_remote = self.modules_repo.remote_url
