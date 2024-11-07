@@ -48,7 +48,6 @@ class ComponentUpdate(ComponentCommand):
         self.force = force
         self.prompt = prompt
         self.sha = sha
-        self.current_sha = sha
         self.update_all = update_all
         self.show_diff = show_diff
         self.save_diff_fn = save_diff_fn
@@ -77,7 +76,7 @@ class ComponentUpdate(ComponentCommand):
                 f"{self.component_type.title()} can not be updated in clones of the nf-core/modules repository."
             )
 
-        if self.prompt and self.current_sha is not None:
+        if self.prompt and self.sha is not None:
             raise UserWarning("Cannot use '--sha' and '--prompt' at the same time.")
 
         if not self.has_valid_directory():
@@ -136,8 +135,8 @@ class ComponentUpdate(ComponentCommand):
             )
 
         # Verify that the provided SHA exists in the repo
-        if self.current_sha is not None and not self.modules_repo.sha_exists_on_branch(self.current_sha):
-            log.error(f"Commit SHA '{self.current_sha}' doesn't exist in '{self.modules_repo.remote_url}'")
+        if self.sha is not None and not self.modules_repo.sha_exists_on_branch(self.sha):
+            log.error(f"Commit SHA '{self.sha}' doesn't exist in '{self.modules_repo.remote_url}'")
             return False
 
         # Get the list of modules/subworkflows to update, and their version information
@@ -200,7 +199,7 @@ class ComponentUpdate(ComponentCommand):
 
             if current_version is not None and not self.force:
                 if current_version == version:
-                    if self.current_sha or self.prompt:
+                    if self.sha or self.prompt:
                         log.info(f"'{component_fullname}' is already installed at {version}")
                     else:
                         log.info(f"'{component_fullname}' is already up to date")
@@ -401,15 +400,13 @@ class ComponentUpdate(ComponentCommand):
             )
 
         # Check that the supplied name is an available module/subworkflow
-        if component and component not in self.modules_repo.get_avail_components(
-            self.component_type, commit=self.current_sha
-        ):
+        if component and component not in self.modules_repo.get_avail_components(self.component_type, commit=self.sha):
             raise LookupError(
                 f"{self.component_type[:-1].title()} '{component}' not found in list of available {self.component_type}."
                 f"Use the command 'nf-core {self.component_type} list remote' to view available software"
             )
 
-        sha = self.current_sha
+        sha = self.sha
         config_entry = None
         if self.update_config is not None:
             if any(
@@ -443,7 +440,7 @@ class ComponentUpdate(ComponentCommand):
                 )
 
             sha = config_entry
-            if self.current_sha is not None:
+            if self.sha is not None:
                 log.warning(
                     f"Found entry in '.nf-core.yml' for {self.component_type[:-1]} '{component}' "
                     "which will override version specified with '--sha'"
@@ -507,7 +504,7 @@ class ComponentUpdate(ComponentCommand):
                         components_info[repo_name][component_dir].append(
                             (
                                 component,
-                                self.current_sha,
+                                self.sha,
                                 self.modules_json.get_component_branch(
                                     self.component_type, component, repo_name, component_dir
                                 ),
@@ -517,7 +514,7 @@ class ComponentUpdate(ComponentCommand):
                         components_info[repo_name][component_dir] = [
                             (
                                 component,
-                                self.current_sha,
+                                self.sha,
                                 self.modules_json.get_component_branch(
                                     self.component_type, component, repo_name, component_dir
                                 ),
@@ -552,7 +549,7 @@ class ComponentUpdate(ComponentCommand):
                                             ),
                                         )
                                     ]
-                        if self.current_sha is not None:
+                        if self.sha is not None:
                             overridden_repos.append(repo_name)
                     elif self.update_config[repo_name][component_dir] is False:
                         for directory, component in components:
@@ -568,7 +565,7 @@ class ComponentUpdate(ComponentCommand):
                                     components_info[repo_name][component_dir].append(
                                         (
                                             component,
-                                            self.current_sha,
+                                            self.sha,
                                             self.modules_json.get_component_branch(
                                                 self.component_type, component, repo_name, component_dir
                                             ),
@@ -578,7 +575,7 @@ class ComponentUpdate(ComponentCommand):
                                     components_info[repo_name][component_dir] = [
                                         (
                                             component,
-                                            self.current_sha,
+                                            self.sha,
                                             self.modules_json.get_component_branch(
                                                 self.component_type, component, repo_name, component_dir
                                             ),
@@ -607,7 +604,7 @@ class ComponentUpdate(ComponentCommand):
                                             ),
                                         )
                                     ]
-                                if self.current_sha is not None:
+                                if self.sha is not None:
                                     overridden_components.append(component)
                             elif dir_config[component] is False:
                                 # Otherwise the entry must be 'False' and we should ignore the component
@@ -641,7 +638,7 @@ class ComponentUpdate(ComponentCommand):
                                 ),
                             )
                         ]
-                if self.current_sha is not None:
+                if self.sha is not None:
                     overridden_repos.append(repo_name)
             elif isinstance(self.update_config, dict) and self.update_config[repo_name] is False:
                 skipped_repos.append(repo_name)
