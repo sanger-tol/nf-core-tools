@@ -967,13 +967,15 @@ class ComponentUpdate(ComponentCommand):
             # If a module/subworkflow has been removed from the subworkflow
             for module in modules_to_update:
                 module = module["name"]
-                if module not in included_modules:
+                included_modules_names = [m["name"] for m in included_modules]
+                if module not in included_modules_names:
                     log.info(f"Removing module '{module}' which is not included in '{component}' anymore.")
                     remove_module_object = ComponentRemove("modules", self.directory)
                     remove_module_object.remove(module, removed_by=component)
             for subworkflow in subworkflows_to_update:
                 subworkflow = subworkflow["name"]
-                if subworkflow not in included_subworkflows:
+                included_subworkflow_names = [m["name"] for m in included_subworkflows]
+                if subworkflow not in included_subworkflow_names:
                     log.info(f"Removing subworkflow '{subworkflow}' which is not included in '{component}' anymore.")
                     remove_subworkflow_object = ComponentRemove("subworkflows", self.directory)
                     remove_subworkflow_object.remove(subworkflow, removed_by=component)
