@@ -892,7 +892,6 @@ class ComponentUpdate(ComponentCommand):
                             for _, details in all_subworkflows.items():
                                 if subworkflow in details:
                                     git_remote = remote_url
-                                break
                 if subworkflow != self.component_type:
                     subworkflows_to_update.append({"name": subworkflow, "git_remote": git_remote})
 
@@ -965,6 +964,10 @@ class ComponentUpdate(ComponentCommand):
             subworkflow_directory = Path(self.directory, self.component_type, org_path, component)
             included_modules, included_subworkflows = get_components_to_install(subworkflow_directory)
             # If a module/subworkflow has been removed from the subworkflow
+            log.info(included_modules)
+            log.info(modules_to_update)
+            log.info(included_subworkflows)
+            log.info(subworkflows_to_update)
             for module in modules_to_update:
                 module = module["name"]
                 included_modules_names = [m["name"] for m in included_modules]
