@@ -922,7 +922,7 @@ class ComponentUpdate(ComponentCommand):
         Update modules and subworkflows linked to the component being updated.
         """
         for s_update in subworkflows_to_update:
-            if s_update in updated:
+            if s_update["name"] in updated:
                 continue
             original_component_type, original_update_all = self._change_component_type("subworkflows")
             self.update(
@@ -934,7 +934,7 @@ class ComponentUpdate(ComponentCommand):
             self._reset_component_type(original_component_type, original_update_all)
 
         for m_update in modules_to_update:
-            if m_update in updated:
+            if m_update["name"] in updated:
                 continue
             original_component_type, original_update_all = self._change_component_type("modules")
             try:
