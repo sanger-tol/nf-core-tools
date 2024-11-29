@@ -42,7 +42,6 @@ class ComponentUpdate(ComponentCommand):
         limit_output=False,
     ):
         super().__init__(component_type, pipeline_dir, remote_url, branch, no_pull)
-        self.original_remote = remote_url
         self.current_remote = remote_url
         self.branch = branch
         self.force = force
@@ -102,11 +101,6 @@ class ComponentUpdate(ComponentCommand):
             branch = component.get("branch", self.branch)
             self.modules_repo = ModulesRepo(remote_url, branch)
             component = component["name"]
-
-        # if self.original_remote != self.modules_repo.remote_url and self.sha is None:
-        #    self.current_sha = None
-        # else:
-        #    self.current_sha = self.sha
 
         self.component = component
         if updated is None:
@@ -964,10 +958,6 @@ class ComponentUpdate(ComponentCommand):
             subworkflow_directory = Path(self.directory, self.component_type, org_path, component)
             included_modules, included_subworkflows = get_components_to_install(subworkflow_directory)
             # If a module/subworkflow has been removed from the subworkflow
-            log.info(included_modules)
-            log.info(modules_to_update)
-            log.info(included_subworkflows)
-            log.info(subworkflows_to_update)
             for module in modules_to_update:
                 module = module["name"]
                 included_modules_names = [m["name"] for m in included_modules]
