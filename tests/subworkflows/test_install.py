@@ -91,7 +91,7 @@ class TestSubworkflowsInstall(TestSubworkflows):
         # Verify that the installed_by entry was added correctly
         modules_json = ModulesJson(self.pipeline_dir)
         mod_json = modules_json.get_modules_json()
-        assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["jvfe"]["fastqc"]["installed_by"] == [
+        assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["nf-core-test"]["fastqc"]["installed_by"] == [
             "fastq_trim_fastp_fastqc"
         ]
 
@@ -107,7 +107,7 @@ class TestSubworkflowsInstall(TestSubworkflows):
             "installed_by"
         ] == ["modules"]
 
-        assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["jvfe"]["fastqc"]["installed_by"] == [
+        assert mod_json["repos"][CROSS_ORGANIZATION_URL]["modules"]["nf-core-test"]["fastqc"]["installed_by"] == [
             "fastq_trim_fastp_fastqc"
         ]
 
