@@ -379,6 +379,8 @@ class TestSubworkflowsUpdate(TestSubworkflows):
         install_obj = SubworkflowInstall(
             self.pipeline_dir,
             remote_url=CROSS_ORGANIZATION_URL,
+            # Hash for an old version of fastq_trim_fastp_fastqc
+            # A dummy code change was made in order to have a commit to compare with
             sha="9627f4367b11527194ef14473019d0e1a181b741",
         )
         # The fastq_trim_fastp_fastqc subworkflow contains the cross-org fastqc module, not the nf-core one
