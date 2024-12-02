@@ -386,11 +386,18 @@ class TestSubworkflowsUpdate(TestSubworkflows):
         # The fastq_trim_fastp_fastqc subworkflow contains the cross-org fastqc module, not the nf-core one
         install_obj.install("fastq_trim_fastp_fastqc")
 
+        patch_path = Path(self.pipeline_dir, "fastq_trim_fastp_fastqc.patch")
         update_obj = SubworkflowUpdate(
             self.pipeline_dir,
             remote_url=CROSS_ORGANIZATION_URL,
+            save_diff_fn=patch_path,
             update_all=False,
             update_deps=True,
             show_diff=False,
         )
         assert update_obj.update("fastq_trim_fastp_fastqc") is True
+
+        with open(patch_path) as fh:
+            content = fh.read()
+            assert "-        fastqc_raw_html = FASTQC_RAW.out.html" in content
+            assert "+        ch_fastqc_raw_html = FASTQC_RAW.out.html" in content
