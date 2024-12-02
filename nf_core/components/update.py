@@ -959,19 +959,21 @@ class ComponentUpdate(ComponentCommand):
             included_modules, included_subworkflows = get_components_to_install(subworkflow_directory)
             # If a module/subworkflow has been removed from the subworkflow
             for module in modules_to_update:
-                module = module["name"]
+                module_name = module["name"]
                 included_modules_names = [m["name"] for m in included_modules]
-                if module not in included_modules_names:
-                    log.info(f"Removing module '{module}' which is not included in '{component}' anymore.")
+                if module_name not in included_modules_names:
+                    log.info(f"Removing module '{module_name}' which is not included in '{component}' anymore.")
                     remove_module_object = ComponentRemove("modules", self.directory)
-                    remove_module_object.remove(module, removed_by=component)
+                    remove_module_object.remove(module_name, removed_by=component)
             for subworkflow in subworkflows_to_update:
-                subworkflow = subworkflow["name"]
+                subworkflow_name = subworkflow["name"]
                 included_subworkflow_names = [m["name"] for m in included_subworkflows]
-                if subworkflow not in included_subworkflow_names:
-                    log.info(f"Removing subworkflow '{subworkflow}' which is not included in '{component}' anymore.")
+                if subworkflow_name not in included_subworkflow_names:
+                    log.info(
+                        f"Removing subworkflow '{subworkflow_name}' which is not included in '{component}' anymore."
+                    )
                     remove_subworkflow_object = ComponentRemove("subworkflows", self.directory)
-                    remove_subworkflow_object.remove(subworkflow, removed_by=component)
+                    remove_subworkflow_object.remove(subworkflow_name, removed_by=component)
             # If a new module/subworkflow is included in the subworklfow and wasn't included before
             for module in included_modules:
                 module_name = module["name"]
