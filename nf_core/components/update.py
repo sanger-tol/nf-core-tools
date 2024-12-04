@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -965,11 +964,7 @@ class ComponentUpdate(ComponentCommand):
     def manage_changes_in_linked_components(self, component, modules_to_update, subworkflows_to_update):
         """Check for linked components added or removed in the new subworkflow version"""
         if self.component_type == "subworkflows":
-            org_path_match = re.search(r"(?:https://|git@)[\w\.]+[:/](.*?)/", self.current_remote)
-            if org_path_match:
-                org_path = org_path_match.group(1)
-
-            subworkflow_directory = Path(self.directory, self.component_type, org_path, component)
+            subworkflow_directory = Path(self.directory, self.component_type, self.modules_repo.repo_path, component)
             included_modules, included_subworkflows = get_components_to_install(subworkflow_directory)
             # If a module/subworkflow has been removed from the subworkflow
             for module in modules_to_update:
