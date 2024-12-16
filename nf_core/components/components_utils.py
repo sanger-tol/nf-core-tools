@@ -1,15 +1,17 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import questionary
 import requests
 import rich.prompt
 import yaml
 
+if TYPE_CHECKING:
+    from nf_core.modules.modules_repo import ModulesRepo
+
 import nf_core.utils
-from nf_core.modules.modules_repo import ModulesRepo
 
 log = logging.getLogger(__name__)
 
@@ -178,16 +180,17 @@ def get_components_to_install(
                 components = meta["components"]
                 for component in components:
                     if isinstance(component, dict):
+                        base_dir = nf_core.utils.determine_base_dir(subworkflow_dir)
+                        _, repo_config = nf_core.utils.load_tools_config(base_dir)
                         component_name = list(component.keys())[0].lower()
                         git_remote = component[component_name]["git_remote"]
-                        branch = component[component_name].get("branch")
-                        modules_repo = ModulesRepo(git_remote, branch)
+                        org_path = getattr(repo_config, "repo_path")
                         current_comp_dict = subworkflows if component_name in subworkflows else modules
 
                         component_dict = {
-                            "org_path": modules_repo.repo_path,
-                            "git_remote": modules_repo.remote_url,
-                            "branch": branch,
+                            "org_path": org_path,
+                            "git_remote": git_remote,
+                            "branch": component[component_name].get("branch"),
                         }
 
                         current_comp_dict[component_name].update(component_dict)
