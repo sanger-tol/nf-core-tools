@@ -180,11 +180,15 @@ def get_components_to_install(
                 components = meta["components"]
                 for component in components:
                     if isinstance(component, dict):
-                        base_dir = nf_core.utils.determine_base_dir(subworkflow_dir)
-                        _, repo_config = nf_core.utils.load_tools_config(base_dir)
                         component_name = list(component.keys())[0].lower()
                         git_remote = component[component_name]["git_remote"]
-                        org_path = getattr(repo_config, "repo_path")
+                        org_path_match = re.search(r"(?:https://|git@)[\w\.]+[:/](.*?)/", git_remote)
+                        if org_path_match:
+                            org_path = org_path_match.group(1)
+                        else:
+                            raise UserWarning(
+                                f"The organisation path of {component_name} could not be established from '{git_remote}'"
+                            )
                         current_comp_dict = subworkflows if component_name in subworkflows else modules
 
                         component_dict = {
