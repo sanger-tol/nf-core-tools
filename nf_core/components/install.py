@@ -36,7 +36,7 @@ class ComponentInstall(ComponentCommand):
         installed_by: Optional[List[str]] = None,
     ):
         super().__init__(component_type, pipeline_dir, remote_url, branch, no_pull)
-        self.current_remote = remote_url
+        self.current_remote = ModulesRepo(remote_url, branch)
         self.branch = branch
         self.force = force
         self.prompt = prompt
@@ -50,15 +50,15 @@ class ComponentInstall(ComponentCommand):
     def install(self, component: Union[str, Dict[str, str]], silent: bool = False) -> bool:
         if isinstance(component, dict):
             # Override modules_repo when the component to install is a dependency from a subworkflow.
-            remote_url = component.get("git_remote", self.current_remote)
+            remote_url = component.get("git_remote", self.current_remote.remote_url)
             branch = component.get("branch", self.branch)
             self.modules_repo = ModulesRepo(remote_url, branch)
             component = component["name"]
 
         if self.current_remote is None:
-            self.current_remote = self.modules_repo.remote_url
+            self.current_remote = self.modules_repo
 
-        if self.current_remote == self.modules_repo.remote_url and self.sha is not None:
+        if self.current_remote.remote_url == self.modules_repo.remote_url and self.sha is not None:
             self.current_sha = self.sha
         else:
             self.current_sha = None
@@ -241,7 +241,7 @@ class ComponentInstall(ComponentCommand):
 
             raise ValueError
 
-        if self.current_remote == modules_repo.remote_url:
+        if self.current_remote.remote_url == modules_repo.remote_url:
             if not modules_repo.component_exists(component, self.component_type, commit=self.current_sha):
                 warn_msg = f"{self.component_type[:-1].title()} '{component}' not found in remote '{modules_repo.remote_url}' ({modules_repo.branch})"
                 log.warning(warn_msg)
